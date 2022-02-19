@@ -1,7 +1,16 @@
 const fs = require("fs");
 const { parse } = require("csv-parse");
 
-const result = [];
+const habitablePlanets = [];
+
+const isValidForLife = (planet) => {
+  return (
+    planet["koi_disposition"] === "CONFIRMED" &&
+    planet["koi_insol"] > 0.36 &&
+    planet["koi_insol"] < 1.1 &&
+    planet["koi_prad"] < 1.6
+  );
+};
 
 fs.createReadStream("kepler_data.csv")
   .pipe(
@@ -10,12 +19,14 @@ fs.createReadStream("kepler_data.csv")
       columns: true,
     })
   )
-  .on("error", (error) => {
-    console.log(error.message);
-  })
   .on("data", (chunk) => {
-    result.push(chunk);
+    if (isValidForLife(chunk)) {
+      habitablePlanets.push(chunk);
+    }
   })
   .on("end", () => {
-    console.log(result);
+    console.log(`${habitablePlanets.length} habitable planets found!`);
+  })
+  .on("error", (error) => {
+    console.log(error.message);
   });
